@@ -2,7 +2,7 @@ This is a simple script to setup Caddy web server and maintain on Linux based OS
 
 ### Quick Installation
 
-`wget https://git.io/vra5C -O - -o /dev/null|sudo bash`
+`wget https://git.io/vra5C -O - -o /dev/null|bash`
 
 See [Installation](https://github.com/sayem314/Caddy-Web-Server-Installer/wiki/Installation) for detailed instructions.
 
