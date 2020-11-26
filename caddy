@@ -18,7 +18,7 @@ caddyuser="caddy" # user under caddy is gonna be running
 
 # Global config
 caddyname="Caddy Web Server"
-cwsiv="v6.5"
+cwsiv="v6.7"
 bashname=$(basename "$0")
 pids=$(pgrep -nf $caddypath/caddy)
 updateCheck="$caddypath/update.check"
@@ -246,19 +246,21 @@ getcaddy () {
 
 	# Check if plugin should be installed
 	if [[ ! $plugin == "" ]]; then
-		cpubits="$cpubits?plugins=$plugin&license=personal&telemetry=off"
-		echo "  Downloading $caddyname with plugin ($plugin) for $cpubitsname" # Caddy linux
+		# cpubits="$cpubits?plugins=$plugin&license=personal&telemetry=off"
+		# echo "  Downloading $caddyname with plugin ($plugin) for $cpubitsname" # Caddy linux
+		echo "  Currenly you can not include plugins as this script uses binary from github."
+		exit 1
 	else
-		cpubits="$cpubits?license=personal&telemetry=off"
-		echo "  Downloading $caddyname for $cpubitsname" # Caddy linux
+		# cpubits="$cpubits?license=personal&telemetry=off"
+		echo "  Downloading $caddyname v1.0.4 for $cpubitsname" # Caddy linux
 	fi
 
 	# Star downloading caddy now
-	if ! wget -q $nocert "https://caddyserver.com/download/linux/$cpubits" -O "caddy_linux_custom.tar.gz" --show-progress; then
+	if ! wget -q $nocert "https://github.com/caddyserver/caddy/releases/download/v1.0.4/caddy_v1.0.4_linux_$cpubits.tar.gz" -O "caddy_linux_custom.tar.gz"; then
 		echo "  [$(tput setaf 1)FAILED$(tput sgr0)]"
 		echo ""
 		echo "  Error: Cannot download Caddy binary!"
-		echo "  https://caddyserver.com/download/linux/$cpubits"
+		echo "  https://github.com/caddyserver/caddy/releases/download/v1.0.4/caddy_v1.0.4_linux_$cpubits.tar.gz"
 		exit 1
 	fi
 	echo ""
@@ -327,6 +329,10 @@ installcaddy () {
 		echo "  Installed $caddyname to $caddypath"
 		echo ""
 	fi
+
+	# Create update check file
+	echo $(date +%s) > $updateCheck
+	chmod 777 $updateCheck
 }
 
 compareVersion () {
@@ -364,7 +370,7 @@ updatecaddy () {
 
 	# Check if there is newer version available
 	caddyversion=$($caddypath/caddy -version | sed -e 's/-/ /g' -e 's/[^0-9\. ]*//g' | awk '{print $1}')
-	CADDYV=$(wget -qO- https://api.github.com/repos/mholt/caddy/releases/latest | grep tag_name | sed 's/[^0-9\.]*//g')
+	CADDYV=$(wget -qO- https://api.github.com/repos/caddyserver/caddy/releases/latest | grep tag_name | sed 's/[^0-9\.]*//g')
 	isGreater=$(compareVersion $CADDYV $caddyversion)
 
 	if [[ $isGreater != ">" ]]; then
@@ -413,6 +419,7 @@ updatecaddy () {
 
 	# Removing caddy archive and printing info
 	echo $(date +%s) > $updateCheck
+	chmod 777 $updateCheck
 	rm -f caddy_linux_custom.tar.gz # Deleting Caddy archive
 	caddyversion=$($caddypath/caddy -version | awk '{print}')
 	echo; echo "  Updated to $caddyversion"; echo;
@@ -814,7 +821,7 @@ checkforupdate () {
 	# Check if there is newer version available
 	# Currenly only checks for caddy web server and not this script
 	caddyversion=$($caddypath/caddy -version | sed -e 's/-/ /g' -e 's/[^0-9\. ]*//g' | awk '{print $1}')
-	CADDYV=$(wget -qO- https://api.github.com/repos/mholt/caddy/releases/latest | grep tag_name | sed 's/[^0-9\.]*//g')
+	CADDYV=$(wget -qO- https://api.github.com/repos/caddyserver/caddy/releases/latest | grep tag_name | sed 's/[^0-9\.]*//g')
 	isGreater=$(compareVersion $CADDYV $caddyversion)
 
 	if [[ $CADDYV != "" && $isGreater == ">" ]]; then
@@ -906,21 +913,16 @@ case $1 in
 esac
 
 # check updates every 48hrs
-if [[ -e "$caddypath/caddy" ]]; then
-	currentDays=$(date +%s)
-	# Create update.check file if not exist
-	if [[ ! -e $updateCheck ]]; then
-		echo $currentDays > $updateCheck
-		chmod 777 $updateCheck
-	fi
-	lastCheckDays=$(cat $updateCheck)
-	updateDays="$(($currentDays - $lastCheckDays))"
-
-	# if more than 48hrs execute update check
-	if [[ $updateDays -gt 172800 ]]; then
-		checkforupdate $currentDays $updateCheck;
-	fi
-fi
+# if [[ -e "$caddypath/caddy" ]] && [[ -e "$updateCheck" ]]; then
+# 	currentDays=$(date +%s)
+# 	lastCheckDays=$(cat $updateCheck)
+# 	updateDays="$(($currentDays - $lastCheckDays))"
+#
+# 	# if more than 48hrs execute update check
+# 	if [[ $updateDays -gt 172800 ]]; then
+# 		checkforupdate $currentDays $updateCheck;
+# 	fi
+# fi
 
 # exit now!
 exit 0
